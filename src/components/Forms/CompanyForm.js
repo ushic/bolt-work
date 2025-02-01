@@ -1,87 +1,94 @@
 import i18n from '../../i18n';
 
-export function createCompanyForm(onSave, onCancel, initialData = {}) {
+export function createCompanyForm(onSubmit, onCancel, initialData = {}) {
   const form = document.createElement('form');
-  form.className = 'form-base company-form';
-  
-  const formFields = [
-    { label: `${i18n.t('companies.form.code')}<span class="required-asterisk">*</span>`, name: 'code', type: 'text', required: true },
-    { label: `${i18n.t('companies.form.name')}<span class="required-asterisk">*</span>`, name: 'name', type: 'text', required: true },
-    { label: i18n.t('companies.form.type'), name: 'type', type: 'select', options: [
-      i18n.t('companies.form.types.corporation'),
-      i18n.t('companies.form.types.llc'),
-      i18n.t('companies.form.types.partnership'),
-      i18n.t('companies.form.types.soleProprietorship'),
-      i18n.t('companies.form.types.nonProfit'),
-      i18n.t('companies.form.types.other')
-    ]},
-    { label: i18n.t('companies.form.active'), name: 'active', type: 'checkbox' }
-  ];
+  form.className = 'form-base';
 
-  form.innerHTML = `
-    <div class="form-header">
-      <h2>${initialData.code ? i18n.t('companies.form.titleEdit') : i18n.t('companies.form.title')}</h2>
-    </div>
-    <div class="form-content">
-      <div class="form-section">
-        <h3>${i18n.t('companies.form.title')}</h3>
-        ${formFields.map(field => {
-          if (field.type === 'select') {
-            return `
-              <div class="form-field">
-                <label for="${field.name}">${field.label}</label>
-                <select id="${field.name}" name="${field.name}">
-                  <option value="">${i18n.t('companies.table.selectType')}</option>
-                  ${field.options.map(option => `
-                    <option value="${option}" ${initialData[field.name] === option ? 'selected' : ''}>
-                      ${option}
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-            `;
-          } else if (field.type === 'checkbox') {
-            return `
-              <div class="form-field checkbox-field">
-                <label>
-                  <input type="checkbox" id="${field.name}" name="${field.name}"
-                    ${initialData[field.name] ? 'checked' : ''}>
-                  ${field.label}
-                </label>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="form-field">
-                <label for="${field.name}">${field.label}</label>
-                <input type="${field.type}" id="${field.name}" name="${field.name}" 
-                  value="${initialData[field.name] || ''}"
-                  ${field.required ? 'required' : ''}>
-              </div>
-            `;
-          }
-        }).join('')}
-      </div>
-    </div>
-    <div class="form-actions">
-      <button type="button" class="btn-cancel">${i18n.t('common.cancel')}</button>
-      <button type="submit" class="btn-save">${initialData.code ? i18n.t('common.edit') : i18n.t('common.save')}</button>
-    </div>
+  // Form Header
+  const header = document.createElement('div');
+  header.className = 'form-header';
+  header.innerHTML = `<h2>${initialData.code ? i18n.t('companies.form.titleEdit') : i18n.t('companies.form.title')}</h2>`;
+  form.appendChild(header);
+
+  // Name and Code Row
+  const nameCodeRow = document.createElement('div');
+  nameCodeRow.className = 'form-row';
+
+  // Name Field
+  const nameField = document.createElement('div');
+  nameField.className = 'form-field';
+  nameField.innerHTML = `
+    <label>${i18n.t('companies.form.name')}</label>
+    <input type="text" id="name" value="${initialData.name || ''}" required>
   `;
+  nameCodeRow.appendChild(nameField);
 
-  // Add event listeners
-  form.querySelector('.btn-cancel').addEventListener('click', onCancel);
+  // Code Field
+  const codeField = document.createElement('div');
+  codeField.className = 'form-field';
+  codeField.innerHTML = `
+    <label>${i18n.t('companies.form.code')}</label>
+    <input type="text" id="code" value="${initialData.code || ''}" ${initialData.code ? 'readonly' : 'required'}>
+  `;
+  nameCodeRow.appendChild(codeField);
+
+  form.appendChild(nameCodeRow);
+
+  // Type and Active Row
+  const typeActiveRow = document.createElement('div');
+  typeActiveRow.className = 'form-row';
+
+  // Type Field
+  const typeField = document.createElement('div');
+  typeField.className = 'form-field';
+  typeField.innerHTML = `
+    <label>${i18n.t('companies.form.type')}</label>
+    <select id="type">
+      ${Object.entries(i18n.t('companies.form.types', { returnObjects: true }))
+        .map(([key, value]) => `
+          <option value="${key}" ${initialData.type === key ? 'selected' : ''}>
+            ${value}
+          </option>
+        `).join('')}
+    </select>
+  `;
+  typeActiveRow.appendChild(typeField);
+
+  // Active Field
+  const activeField = document.createElement('div');
+  activeField.className = 'form-field';
+  activeField.innerHTML = `
+    <label>
+      <input type="checkbox" id="active" ${initialData.active ? 'checked' : ''}>
+      ${i18n.t('companies.form.active')}
+    </label>
+  `;
+  typeActiveRow.appendChild(activeField);
+
+  form.appendChild(typeActiveRow);
+
+  // Form Actions
+  const actions = document.createElement('div');
+  actions.className = 'form-actions';
+  actions.innerHTML = `
+    <button type="button" class="btn-cancel">${i18n.t('common.cancel')}</button>
+    <button type="submit" class="btn-save">${i18n.t('common.save')}</button>
+  `;
+  form.appendChild(actions);
+
+  // Event Listeners
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const formData = new FormData(form);
-    const data = {
-      code: formData.get('code'),
-      name: formData.get('name'),
-      type: formData.get('type'),
-      active: formData.has('active')
+    const formData = {
+      code: form.querySelector('#code').value,
+      name: form.querySelector('#name').value,
+      type: form.querySelector('#type').value,
+      active: form.querySelector('#active').checked
     };
-    onSave(data);
+    onSubmit(formData);
   });
+
+  actions.querySelector('.btn-cancel').addEventListener('click', onCancel);
 
   return form;
 }

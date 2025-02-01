@@ -1,90 +1,114 @@
 import i18n from '../../i18n';
 
-export function createWarehouseForm(onSave, onCancel, initialData = {}) {
+export function createWarehouseForm(onSubmit, onCancel, initialData = {}) {
   const form = document.createElement('form');
-  form.className = 'form-base warehouse-form';
-  
-  const types = [
-    { value: 'main', label: i18n.t('warehouses.form.types.main') },
-    { value: 'regional', label: i18n.t('warehouses.form.types.regional') },
-    { value: 'local', label: i18n.t('warehouses.form.types.local') }
-  ];
-  
-  const statuses = [
-    { value: 'active', label: i18n.t('warehouses.form.statuses.active') },
-    { value: 'inactive', label: i18n.t('warehouses.form.statuses.inactive') }
-  ];
-  
-  const formFields = [
-    { label: `${i18n.t('warehouses.form.code')}<span class="required-asterisk">*</span>`, name: 'code', type: 'text', required: true, readonly: true },
-    { label: `${i18n.t('warehouses.form.name')}<span class="required-asterisk">*</span>`, name: 'name', type: 'text', required: true },
-    { label: `${i18n.t('warehouses.form.type')}<span class="required-asterisk">*</span>`, name: 'type', type: 'select', options: types, required: true },
-    { label: i18n.t('warehouses.form.organization'), name: 'organization', type: 'text' },
-    { label: `${i18n.t('warehouses.form.status')}<span class="required-asterisk">*</span>`, name: 'status', type: 'select', options: statuses, required: true },
-    { label: i18n.t('warehouses.form.description'), name: 'description', type: 'textarea' }
-  ];
+  form.className = 'form-base';
 
-  form.innerHTML = `
-    <div class="form-header">
-      <h2>${initialData.code ? i18n.t('warehouses.form.titleEdit') : i18n.t('warehouses.form.title')}</h2>
-    </div>
-    <div class="form-content">
-      ${formFields.map(field => {
-        if (field.type === 'select') {
-          return `
-            <div class="form-field">
-              <label for="${field.name}">${field.label}</label>
-              <select id="${field.name}" name="${field.name}" ${field.required ? 'required' : ''}>
-                <option value="">${i18n.t('warehouses.form.selectOption')}</option>
-                ${field.options.map(option => `
-                  <option value="${option.value}" ${initialData[field.name] === option.value ? 'selected' : ''}>
-                    ${option.label}
-                  </option>
-                `).join('')}
-              </select>
-            </div>
-          `;
-        } else if (field.type === 'textarea') {
-          return `
-            <div class="form-field">
-              <label for="${field.name}">${field.label}</label>
-              <textarea id="${field.name}" name="${field.name}" rows="4">${initialData[field.name] || ''}</textarea>
-            </div>
-          `;
-        } else {
-          return `
-            <div class="form-field">
-              <label for="${field.name}">${field.label}</label>
-              <input type="${field.type}" id="${field.name}" name="${field.name}" 
-                value="${initialData[field.name] || ''}"
-                ${field.required ? 'required' : ''}
-                ${field.readonly ? 'readonly' : ''}>
-            </div>
-          `;
-        }
-      }).join('')}
-    </div>
-    <div class="form-actions">
-      <button type="button" class="btn-cancel">${i18n.t('common.cancel')}</button>
-      <button type="submit" class="btn-save">${i18n.t('common.save')}</button>
-    </div>
+  // Form Header
+  const header = document.createElement('div');
+  header.className = 'form-header';
+  header.innerHTML = `<h2>${i18n.t('warehouses.form.title')}</h2>`;
+  form.appendChild(header);
+
+  // Description Field
+  const descriptionField = document.createElement('div');
+  descriptionField.className = 'form-field';
+  descriptionField.innerHTML = `
+    <label>${i18n.t('warehouses.form.description')}</label>
+    <textarea id="description">${initialData.description || ''}</textarea>
   `;
+  form.appendChild(descriptionField);
 
-  // Add event listeners
-  form.querySelector('.btn-cancel').addEventListener('click', onCancel);
+  // Name and Code Row
+  const nameCodeRow = document.createElement('div');
+  nameCodeRow.className = 'form-row';
+
+  // Name Field
+  const nameField = document.createElement('div');
+  nameField.className = 'form-field';
+  nameField.innerHTML = `
+    <label>${i18n.t('warehouses.form.name')}</label>
+    <input type="text" id="name" value="${initialData.name || ''}" required>
+  `;
+  nameCodeRow.appendChild(nameField);
+
+  // Code Field
+  const codeField = document.createElement('div');
+  codeField.className = 'form-field';
+  codeField.innerHTML = `
+    <label>${i18n.t('warehouses.form.code')}</label>
+    <input type="text" id="code" value="${initialData.code || ''}" required>
+  `;
+  nameCodeRow.appendChild(codeField);
+
+  form.appendChild(nameCodeRow);
+
+  // Type and Organization Row
+  const typeOrgRow = document.createElement('div');
+  typeOrgRow.className = 'form-row';
+
+  // Type Field
+  const typeField = document.createElement('div');
+  typeField.className = 'form-field';
+  typeField.innerHTML = `
+    <label>${i18n.t('warehouses.form.type')}</label>
+    <select id="type">
+      ${Object.entries(i18n.t('warehouses.form.types', { returnObjects: true }))
+        .map(([key, value]) => `
+          <option value="${key}" ${initialData.type === key ? 'selected' : ''}>
+            ${value}
+          </option>
+        `).join('')}
+    </select>
+  `;
+  typeOrgRow.appendChild(typeField);
+
+  // Organization Field
+  const orgField = document.createElement('div');
+  orgField.className = 'form-field';
+  orgField.innerHTML = `
+    <label>${i18n.t('warehouses.form.organization')}</label>
+    <input type="text" id="organization" value="${initialData.organization || ''}">
+  `;
+  typeOrgRow.appendChild(orgField);
+
+  form.appendChild(typeOrgRow);
+
+  // Active Status Field
+  const activeField = document.createElement('div');
+  activeField.className = 'form-field';
+  activeField.innerHTML = `
+    <label>
+      <input type="checkbox" id="active" ${initialData.active ? 'checked' : ''}>
+      ${i18n.t('warehouses.form.active')}
+    </label>
+  `;
+  form.appendChild(activeField);
+
+  // Form Actions
+  const actions = document.createElement('div');
+  actions.className = 'form-actions';
+  actions.innerHTML = `
+    <button type="button" class="btn-cancel">${i18n.t('common.cancel')}</button>
+    <button type="submit" class="btn-save">${i18n.t('common.save')}</button>
+  `;
+  form.appendChild(actions);
+
+  // Event Listeners
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const formData = new FormData(form);
-    const data = {
-      code: formData.get('code'),
-      name: formData.get('name'),
-      type: formData.get('type'),
-      organization: formData.get('organization'),
-      status: formData.get('status'),
-      description: formData.get('description')
+    const formData = {
+      code: form.querySelector('#code').value,
+      name: form.querySelector('#name').value,
+      type: form.querySelector('#type').value,
+      organization: form.querySelector('#organization').value,
+      description: form.querySelector('#description').value,
+      active: form.querySelector('#active').checked
     };
-    onSave(data);
+    onSubmit(formData);
   });
+
+  actions.querySelector('.btn-cancel').addEventListener('click', onCancel);
 
   return form;
 }

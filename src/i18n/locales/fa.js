@@ -1,4 +1,3 @@
-
 export const fa = {
   app: {
     title: 'تی‌ال.ورک.ترک'
